@@ -21,25 +21,71 @@ def simplex(c, A, b, tipo='max'):
     
     iteracion = 0
     print(f"\n{'='*60}\nMÉTODO SIMPLEX - {original_tipo.upper()}\n{'='*60}")
+   
+    print("\nTabla inicial:")
+    mostrar_tabla(tabla, n, m)
     
+    while True:
+        
+        if np.all(tabla[-1, :-1] >= -1e-10):  
+            break
+        
+        iteracion += 1
+        
+        col_piv = np.argmin(tabla[-1, :-1])
+        
+       
+        if tabla[-1, col_piv] >= -1e-10:
+            break
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        ratios = []
+        for i in range(m):
+            if tabla[i, col_piv] > 1e-10:
+                ratios.append(tabla[i, -1] / tabla[i, col_piv])
+            else:
+                ratios.append(np.inf)
+        
+        if all(r == np.inf for r in ratios):
+            print("\n¡Solución no acotada!")
+            return None
+        
+        fila_piv = np.argmin(ratios)
+        pivote = tabla[fila_piv, col_piv]
+        
+        print(f"\nIteración {iteracion}:")
+        print(f"  Variable que entra: x{col_piv+1}")
+        print(f"  Variable que sale: fila {fila_piv+1}")
+        print(f"  Elemento pivote: {pivote:.4f}")
+        
+        tabla[fila_piv] = tabla[fila_piv] / pivote
+        
+        for i in range(m + 1):
+            if i != fila_piv:
+                factor = tabla[i, col_piv]
+                tabla[i] = tabla[i] - factor * tabla[fila_piv]
+        
+        mostrar_tabla(tabla, n, m)
+ 
+    solucion = np.zeros(n)
+    for j in range(n):
+        col = tabla[:-1, j]
+    
+        if np.sum(np.abs(col) > 1e-10) == 1:
+            idx = np.where(np.abs(col - 1) < 1e-10)[0]
+            if len(idx) == 1:
+                solucion[j] = tabla[idx[0], -1]
+    
+    valor_z = tabla[-1, -1]
+    if original_tipo == 'min':
+        valor_z = -valor_z
+    
+    print(f"\n{'='*60}\nSOLUCIÓN ÓPTIMA\n{'='*60}")
+    for i, val in enumerate(solucion):
+        print(f"x{i+1} = {val:.4f}")
+    print(f"Z = {valor_z:.4f}")
+    print(f"Iteraciones: {iteracion}\n{'='*60}\n")
+    
+    return solucion, valor_z
 
 def mostrar_tabla(tabla, n, m):
     """Muestra la tabla simplex de forma legible"""
@@ -118,3 +164,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
